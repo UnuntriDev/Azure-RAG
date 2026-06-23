@@ -1,0 +1,56 @@
+# ─── Secrets / env ───
+.env
+.env.*
+!.env.example
+
+# ─── Python ───
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.uv/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+
+# ─── Node / Next.js ───
+node_modules/
+.next/
+out/
+.turbo/
+npm-debug.log*
+yarn-error.log*
+
+# ─── Build / data ───
+dist/
+build/
+*.egg-info/
+uploads/
+*.local
+
+# ─── Eval reports (generated artifacts) ───
+backend/app/eval/reports/
+
+# ─── Local tooling (downloaded binaries, e.g. bicep CLI) ───
+.tools/
+
+# ─── IaC build output ───
+infra/**/*.json
+!infra/**/*.bicepparam
+
+# ─── OS / editor ───
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# ─── AI assistant tooling (local only) ───
+.claude/
+CLAUDE.md
+
+# ─── Logs ───
+*.log
+
+# ─── Local scratch / sample data (not part of the app) ───
+/azure_services.csv
+/test_doc.txt

@@ -1,0 +1,44 @@
+name: Deploy backend
+
+# Required: Secrets: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
+#           Variables: AZURE_RESOURCE_GROUP, ACR_NAME, BACKEND_APP_NAME
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yml"
+  workflow_dispatch:
+
+permissions:
+  id-token: write # OIDC token for azure/login
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build & push image in ACR
+        run: |
+          az acr build \
+            --registry "${{ vars.ACR_NAME }}" \
+            --image "azure-rag-backend:${{ github.sha }}" \
+            --image "azure-rag-backend:latest" \
+            ./backend
+
+      - name: Deploy to Container App
+        run: |
+          az containerapp update \
+            --name "${{ vars.BACKEND_APP_NAME }}" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --image "${{ vars.ACR_NAME }}.azurecr.io/azure-rag-backend:${{ github.sha }}"

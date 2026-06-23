@@ -1,0 +1,76 @@
+[project]
+name = "azure-rag-backend"
+version = "0.1.0"
+description = "Azure RAG Knowledge Assistant — backend (stage 1)"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "asyncpg>=0.30",
+    "alembic>=1.14",
+    "python-multipart>=0.0.12",
+    "httpx>=0.28",
+    "aiohttp>=3.10",  # async transport for azure-core (Search/Blob aio clients)
+    "openai>=1.55",
+    "azure-search-documents>=11.5.2",
+    "azure-storage-blob>=12.24",
+    "pypdf>=5.1",
+    "python-docx>=1.1",  # .docx parsing
+    "openpyxl>=3.1",  # .xlsx parsing
+    "tiktoken>=0.8",
+    "structlog>=24.4",
+    "aiofiles>=24.1",
+    "langgraph>=0.2.50",
+    "langchain-openai>=0.2.10",
+    "google-auth>=2.0",
+    "slowapi>=0.1.10",
+    "redis>=8.0.0",
+    "azure-identity>=1.17",
+    "azure-monitor-opentelemetry>=1.6",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.8",
+    "black>=24.10",
+    "pre-commit>=4.0",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "aiosqlite>=0.20",
+]
+eval = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+# Application, not a distributable package — uv installs deps only, no build step.
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+# FastAPI uses callables in argument defaults (Depends/File/...) by design — not a B008 bug.
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.File",
+    "fastapi.Form",
+    "fastapi.Query",
+    "fastapi.Body",
+    "fastapi.Header",
+    "fastapi.Path",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
