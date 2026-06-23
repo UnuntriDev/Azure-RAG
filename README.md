@@ -60,45 +60,68 @@ flowchart TB
   drives state: `pending → processing → indexed | failed`.
 - Delete removes a document from **all three** stores (Postgres row, Blob original, AI Search chunks).
 
-## Prerequisites
+## Getting started
 
-- Docker + Docker Compose v2
-- Node.js 20+ and npm (frontend dev server)
-- [uv](https://docs.astral.sh/uv/) (only if running the backend on the host; fetches Python 3.12)
-- **Azure resources** (stage 1 talks to live Azure — see `docs/azure-setup.md`):
-  - Azure OpenAI with a chat deployment (e.g. `gpt-4o-mini` or `gpt-4o`) and `text-embedding-3-small`
-  - Azure AI Search service (Free tier is enough for a demo)
-  - Azure Storage account (Blob)
+### Step 1 — Install prerequisites
 
-## Setup
+| Tool | Purpose | Install |
+|------|---------|---------|
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | runs the full stack | docker.com |
+| [Git](https://git-scm.com/) | clone the repo | git-scm.com |
+| Azure account | OpenAI · AI Search · Blob | [portal.azure.com](https://portal.azure.com) |
+
+### Step 2 — Provision Azure services
+
+Follow [`docs/azure-setup.md`](docs/azure-setup.md) to create:
+
+1. **Azure OpenAI** — deploy `gpt-4o-mini` (chat) and `text-embedding-3-small` (embeddings)
+2. **Azure AI Search** — Basic SKU, note the endpoint and API key
+3. **Azure Blob Storage** — create a container called `documents`
+
+You will get a set of keys and endpoints — you need them in the next step.
+
+### Step 3 — Clone and configure
 
 ```bash
-# 1. Env — copy and fill in the AZURE_* values (see docs/azure-setup.md)
+git clone https://github.com/UnuntriDev/Azure-RAG.git
+cd Azure-RAG
 cp .env.example .env
-
-# 2. Full stack — Postgres, Redis, backend, ingestion worker, frontend
-#    (migrations run automatically on backend container start)
-docker compose up --build        # backend :8000, frontend :3000
 ```
 
-Open http://localhost:3000. Liveness: `curl http://localhost:8000/api/health`.
+Open `.env` and fill in the values from Step 2:
 
-For frontend hot-reload during development, run it on the host instead of the container:
-
-```bash
-cd frontend
-npm install
-npm run dev                       # http://localhost:3000
+```env
+AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/
+AZURE_OPENAI_API_KEY=...
+AZURE_OPENAI_CHAT_DEPLOYMENT=gpt-4o-mini
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-3-small
+AZURE_SEARCH_ENDPOINT=https://<your-resource>.search.windows.net
+AZURE_SEARCH_API_KEY=...
+AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;...
 ```
 
-> **Port 8000 taken?** Override the host port: `BACKEND_PORT=8002 docker compose up --build`
-> (then set `NEXT_PUBLIC_API_URL=http://localhost:8002` in `frontend/.env.local`).
+Everything else in `.env` has working defaults for local development.
 
-### Running the backend on the host instead of Docker
+### Step 4 — Run
 
 ```bash
-uv run --directory backend alembic upgrade head      # apply migrations
-uv run --directory backend uvicorn app.main:app --reload --port 8000
+docker compose up --build
+```
+
+- Frontend → http://localhost:3000
+- Backend health check → http://localhost:8000/api/health
+
+Migrations run automatically on first start. Upload a document, ask a question — done.
+
+> **Port conflict?** `BACKEND_PORT=8002 docker compose up --build` then set
+> `NEXT_PUBLIC_API_URL=http://localhost:8002` in `frontend/.env.local`.
+
+### Frontend hot-reload (optional)
+
+If you want live reload while editing the UI, run the frontend outside Docker:
+
+```bash
+cd frontend && npm install && npm run dev   # http://localhost:3000
 ```
 
 ## API
